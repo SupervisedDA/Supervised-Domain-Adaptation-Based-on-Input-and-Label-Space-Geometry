@@ -48,7 +48,6 @@ def RunCofiguration(hp):
     train_losses_src, train_losses_tgt, val_losses_src, val_losses_tgt = [], [], [], []
     train_accs_src, train_accs_tgt, val_accs_src, val_accs_tgt = [], [], [], []
 
-
     if n_classes == -1:
         # criterion = nn.MSELoss()
         criterion = nn.L1Loss()
@@ -143,7 +142,6 @@ def RunCofiguration(hp):
 ##
 if __name__ == "__main__":
     args = parser.parse_args()
-    # args.Src='A'; args.Tgt = 'W'
     hp=GetConfFromArgs(args)
     RunCofiguration(hp)
 

@@ -1,4 +1,4 @@
-#!/bin/bashwhich
+#!/bin/bash
 #REM ----------------Digits Experiments----------------
 
 SamplesPerClass=("1" "3" "5" "7")

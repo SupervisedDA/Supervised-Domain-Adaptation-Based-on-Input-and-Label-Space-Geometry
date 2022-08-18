@@ -51,7 +51,7 @@ def GetParser(parser):
     parser.add_argument("--SamplesPerClass", type=int, default=3,
                         help="SamplesPerClass", choices=[1, 3, 5, 7])
     parser.add_argument("--Method", type=str, default='SDA_IO',
-                        help="Method", choices=['SDA_IO', 'CCSA', 'dSNE'])
+                        help="Method, our methods is denoted by SDA_IO", choices=['SDA_IO', 'CCSA', 'dSNE'])
     parser.add_argument("--GPU_ID", type=int, default=-1,
                         help="GPU_ID, -1 for CPU")
     parser.add_argument("--LogToWandb", type=bool, default=False,
@@ -81,7 +81,7 @@ def GetConfFromArgs(args):
         hp.NumberOfBatches=50000
         hp.WD=1e-3
 
-        # for testing (fast convergence)
+        # ------- for testing (fast convergence) -------
         # hp.Optimizer = 'Adadelta'
         # hp.LearningRate = 1
         # hp.NumberOfBatches = 1000
@@ -89,7 +89,7 @@ def GetConfFromArgs(args):
     if args.Src in ['A','W','D']:
         hp.Optimizer = 'SGD'
         hp.LearningRate = 1e-4
-        hp.BatchSize = 128
+        hp.BatchSize = 32
         hp.NumberOfBatches = 50000
         hp.WD = 1e-4
     return hp

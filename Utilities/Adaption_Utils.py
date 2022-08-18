@@ -88,14 +88,10 @@ def CORAL_Loss(source, target):
     # take Frobenius norm (https://pytorch.org/docs/stable/torch.html)
     loss = torch.norm(torch.mul((source_covariance - target_covariance),
                                 (source_covariance - target_covariance)), p="fro")
-
     # loss=torch.norm(logm(source_covariance)- logm(target_covariance))
-
     # loss = torch.norm(torch.mm((source_covariance-target_covariance),
     # 							(source_covariance-target_covariance)), p="fro")
-
     loss = loss / (4 * d * d)
-
     return loss
 
 def compute_covariance(data):
@@ -111,7 +107,8 @@ def compute_covariance(data):
     # check gpu or cpu support
     if data.is_cuda:
         device = torch.device("cuda")
-        device = torch.device("cuda:%g" % hp.GPU)
+        # device = torch.device("cuda:%g" % hp.GPU)
+        device = data.device
     else:
         device = torch.device("cpu")
 
@@ -213,12 +210,10 @@ def GetWeightMatrix(pairwise_distances, weight_K=5, weight_kernel_scale='Fixed',
         # weight_matrix=1- torch.diag(1/torch.sum(pairwise_distances,dim=1)) @ pairwise_distances
     return weight_matrix
 
-
 def ToOneHot(Y,n_classes):
     OneHotY = torch.zeros(len(Y), n_classes).to(Y.device)
     OneHotY[range(len(Y)), Y] = 1
     return OneHotY
-
 
 def GetCDCATerm(src_feature,tgt_feature,src_label,tgt_label,n_classes,hp):
     labels_s_dist = ToOneHot(src_label, n_classes)
@@ -240,7 +235,6 @@ def GetCDCATerm(src_feature,tgt_feature,src_label,tgt_label,n_classes,hp):
     loss_s_nn = nn.CrossEntropyLoss()(labels_s_nn, src_label)
     loss_cdca = torch.min(loss_s_nn, loss_t_nn)
     return loss_cdca
-
 
 def GetUDATerm(src_feature,tgt_feature,hp):
     if hp.UDA == 'CORAL':

@@ -1,5 +1,3 @@
-
-
 """
 @author: Junguang Jiang
 @contact: JiangJunguang1123@outlook.com
@@ -9,14 +7,13 @@ import torchvision.datasets as datasets
 import numpy as np
 import torchvision.transforms as T
 import os
-
 from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# from TLIB.common.modules.classifier import Classifier as ClassifierBase
+##
 
 class MyOffice(datasets.VisionDataset):
     """
