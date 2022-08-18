@@ -1,0 +1,118 @@
+##
+def GetModifiedConf(keys=[],vals=[]):
+    base_conf = {}
+    tmp=base_conf.copy()
+    for (key,val) in zip(keys,vals):
+        tmp[key]=val
+    return tmp
+
+class ConfClass():
+    def __init__(self):
+        #misc + logging
+        self.GPU = -1
+        self.LogToWandb=True
+        self.WadbUsername='EnterYourUserNameHere'
+        self.ProjectName='DigitsExperiment'
+        self.ExpName='SDA_Experiment'
+        self.ValMonitoringFactor=10
+
+        #dataset
+        self.Src='M'
+        self.Tgt='U'
+        self.TaskName= self.Src+'_to_'+self.Tgt
+        self.SamplesPerClass=7
+        self.UnlabeledTgtClasses=0
+
+        # optimizer hyperparams
+        self.BatchSize=256
+        self.NumberOfBatches = 10000
+        self.LearningRate=1
+        self.Optimizer='SGD'
+        self.WD=1e-3
+
+        ## model hyperparams
+        self.Coeffs=[1,1,1,1,1]
+        self.UDA='CORAL'
+        self.weight_K = -1
+        self.weight_kernel_scale = 'Auto'
+        self.weight_use_scale_grad = False
+        self.Method='SDA_IO'
+
+
+
+
+
+        # # self.TwoHeaded=False
+        # self.coeffs = [1,1,1,1,0] #src,tgt,dd,la,baseline
+        # self.Baseline='CCSA'
+        # self.Baseline = 'CCSA'
+        # #
+        # self.weight_K = -1
+        # self.weight_kernel_scale = 'Auto'
+        # self.weight_use_scale_grad = False
+        # #
+        # self.mmd_kernel_scale = 'Auto'
+        # self.mmd_kernel_bandwidth = [0.1, 0.5, 1, 2]
+        # self.mmd_sample_source=True #sample source points to match the number of target points, irrelevant when using batches
+        # #
+        # self.nn_function='Min'
+        # self.nn_method='Outputs'
+        # self.nn_loss='MSE'
+        #
+        # self.UseTgtAdvOnly=False
+        # self.UseMyAdv=False
+        #
+        # self.DDMethod='CORAL'
+
+
+##
+
+def GetParser(parser):
+    parser.add_argument("--Src", type=str, default="U",
+                        help="Source domain", choices=['U', 'M', 'A', 'W', 'D'])
+    parser.add_argument("--Tgt", type=str, default="M",
+                        help="Target domain", choices=['U', 'M', 'A', 'W', 'D'])
+    parser.add_argument("--SamplesPerClass", type=int, default=3,
+                        help="SamplesPerClass", choices=[1, 3, 5, 7])
+    parser.add_argument("--Method", type=str, default='SDA_IO',
+                        help="Method", choices=['SDA_IO', 'CCSA', 'dSNE'])
+    parser.add_argument("--GPU_ID", type=int, default=-1,
+                        help="GPU_ID, -1 for CPU")
+    parser.add_argument("--LogToWandb", type=bool, default=False,
+                        help="Log the results to Weights and Biases")
+    parser.add_argument("--return_counts", type=bool, default=True)
+    parser.add_argument("--mode", default='client')
+    parser.add_argument("--port", default=52162)
+    return parser
+
+
+def GetConfFromArgs(args):
+    hp = ConfClass()
+    hp.Src=args.Src
+    hp.Tgt =args.Tgt
+    hp.GPU=args.GPU_ID
+    hp.Method=args.Method
+    hp.SamplesPerClass= args.SamplesPerClass
+    hp.LogToWandb=args.LogToWandb
+
+    FieldsForName = ['Src', 'Tgt', 'SamplesPerClass', 'Method']
+    hp.ExpName = '_'.join(['%s="%s"' % (f, hp.__getattribute__(f)) for f in FieldsForName])
+
+    if args.Src in ['M','U']:
+        hp.Optimizer = 'SGD'
+        hp.LearningRate=1e-4
+        hp.BatchSize=128
+        hp.NumberOfBatches=50000
+        hp.WD=1e-3
+
+        hp.Optimizer = 'Adadelta'
+        hp.LearningRate = 1
+        hp.NumberOfBatches = 100
+
+    if args.Src in ['A','W','D']:
+        hp.Optimizer = 'SGD'
+        hp.LearningRate = 1e-4
+        hp.BatchSize = 128
+        hp.NumberOfBatches = 50000
+        hp.WD = 1e-4
+    return hp
