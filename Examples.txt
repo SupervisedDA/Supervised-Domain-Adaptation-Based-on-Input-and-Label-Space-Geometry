@@ -4,3 +4,5 @@ python RunExperiment.py --Src "U" --Tgt "M" --SamplesPerClass 3 --Method "dSNE" 
 
 
 python RunExperiment.py --Src "A" --Tgt "W" --Method "SDA_IO" --GPU_ID -1
+python RunExperiment.py --Src "A" --Tgt "W" --Method "CCSA" --GPU_ID -1
+python RunExperiment.py --Src "A" --Tgt "W" --Method "dSNE" --GPU_ID -1

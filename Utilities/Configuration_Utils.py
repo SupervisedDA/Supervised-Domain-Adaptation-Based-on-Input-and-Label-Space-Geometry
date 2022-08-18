@@ -11,9 +11,10 @@ class ConfClass():
         #misc + logging
         self.GPU = -1
         self.LogToWandb=True
-        self.WadbUsername='EnterYourUserNameHere'
-        self.ProjectName='DigitsExperiment'
+        self.WadbUsername='EnterYourUserName'
+        self.ProjectName='SDA_Experiments_Project'
         self.ExpName='SDA_Experiment'
+        self.MonitorTraining=True
         self.ValMonitoringFactor=10
 
         #dataset
@@ -30,7 +31,7 @@ class ConfClass():
         self.Optimizer='SGD'
         self.WD=1e-3
 
-        ## model hyperparams
+        # model hyperparams
         self.Coeffs=[1,1,1,1,1]
         self.UDA='CORAL'
         self.weight_K = -1
@@ -38,31 +39,6 @@ class ConfClass():
         self.weight_use_scale_grad = False
         self.Method='SDA_IO'
 
-
-
-
-
-        # # self.TwoHeaded=False
-        # self.coeffs = [1,1,1,1,0] #src,tgt,dd,la,baseline
-        # self.Baseline='CCSA'
-        # self.Baseline = 'CCSA'
-        # #
-        # self.weight_K = -1
-        # self.weight_kernel_scale = 'Auto'
-        # self.weight_use_scale_grad = False
-        # #
-        # self.mmd_kernel_scale = 'Auto'
-        # self.mmd_kernel_bandwidth = [0.1, 0.5, 1, 2]
-        # self.mmd_sample_source=True #sample source points to match the number of target points, irrelevant when using batches
-        # #
-        # self.nn_function='Min'
-        # self.nn_method='Outputs'
-        # self.nn_loss='MSE'
-        #
-        # self.UseTgtAdvOnly=False
-        # self.UseMyAdv=False
-        #
-        # self.DDMethod='CORAL'
 
 
 ##
@@ -105,9 +81,10 @@ def GetConfFromArgs(args):
         hp.NumberOfBatches=50000
         hp.WD=1e-3
 
-        hp.Optimizer = 'Adadelta'
-        hp.LearningRate = 1
-        hp.NumberOfBatches = 100
+        # for testing (fast convergence)
+        # hp.Optimizer = 'Adadelta'
+        # hp.LearningRate = 1
+        # hp.NumberOfBatches = 1000
 
     if args.Src in ['A','W','D']:
         hp.Optimizer = 'SGD'

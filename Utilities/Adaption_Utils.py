@@ -131,21 +131,21 @@ def compute_covariance(data):
 
 ## UDA experiments
 # MDD
-from dalib.adaptation.mdd import MarginDisparityDiscrepancy, ImageClassifier
+# from dalib.adaptation.mdd import MarginDisparityDiscrepancy, ImageClassifier
+#
+# # DAN
+# from dalib.adaptation.dan import MultipleKernelMaximumMeanDiscrepancy, ImageClassifier
+# from dalib.modules.kernels import GaussianKernel
+#
+# # DANN
+# from dalib.modules.domain_discriminator import DomainDiscriminator
+# from dalib.adaptation.dann import DomainAdversarialLoss, ImageClassifier
+#
+#
+# # CDAN
+# from dalib.adaptation.cdan import ConditionalDomainAdversarialLoss, ImageClassifier
+# from cdannn import ConditionalDomainAdversarialLoss, ImageClassifier
 
-# DAN
-from dalib.adaptation.dan import MultipleKernelMaximumMeanDiscrepancy, ImageClassifier
-from dalib.modules.kernels import GaussianKernel
-
-# DANN
-from dalib.modules.domain_discriminator import DomainDiscriminator
-from dalib.adaptation.dann import DomainAdversarialLoss, ImageClassifier
-
-
-# CDAN
-from dalib.adaptation.cdan import ConditionalDomainAdversarialLoss, ImageClassifier
-
-from cdannn import ConditionalDomainAdversarialLoss, ImageClassifier
 ## Ours
 def pdist(sample_1, sample_2, norm=2, eps=1e-5):
     r"""Compute the matrix of all squared pairwise distances.

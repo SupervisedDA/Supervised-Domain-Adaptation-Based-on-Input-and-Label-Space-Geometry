@@ -25,8 +25,6 @@ def RunCofiguration(hp):
     ## model+optimizer
     device = torch.device("cuda:%g" % hp.GPU if (torch.cuda.is_available() and hp.GPU >= 0) else "cpu")
     net = GetModel(hp, device)
-
-    self = net
     net.to(device)
 
     if hp.Optimizer=='Adadelta':
@@ -39,19 +37,17 @@ def RunCofiguration(hp):
         optimizer = torch.optim.Adam(net.parameters(), lr=hp.LearningRate, weight_decay=hp.WD)
 
     ## Logging
-    # hp.LogToWandb = LogToWandb
     if hp.LogToWandb:
         wandb.login()
-        wandb.init(project=hp.ProjectName, entity="orkatz")
+        wandb.init(project=hp.ProjectName, entity=hp.WadbUsername)
         wandb.run.name = hp.ExpName
-        # wandb.watch(model, log="all")
         config = wandb.config
         config.args = vars(hp)
 
     ## Train model
-    train_losses_src, train_losses_tgt, test_losses_src, test_losses_tgt = [], [], [], []
-    train_accs_src, train_accs_tgt, test_accs_src, test_accs_tgt = [], [], [], []
-    losses_dd, losses_nn = [], []
+    train_losses_src, train_losses_tgt, val_losses_src, val_losses_tgt = [], [], [], []
+    train_accs_src, train_accs_tgt, val_accs_src, val_accs_tgt = [], [], [], []
+
 
     if n_classes == -1:
         # criterion = nn.MSELoss()
@@ -60,7 +56,7 @@ def RunCofiguration(hp):
         criterion = nn.CrossEntropyLoss()
 
     pbar = tqdm(range(hp.NumberOfBatches),
-                desc="Training models for %s" % hp.ExpName,
+                desc="Training model",
                 bar_format="{desc:20}{percentage:2.0f}{r_bar}")
     for batch in pbar:
         net.train()
@@ -95,21 +91,33 @@ def RunCofiguration(hp):
         loss.backward()
         optimizer.step()
 
-        # ----- Logger -----
-        # train_losses_src.append(loss_s.item())
-        # train_losses_tgt.append(loss_t.item())
-        # if batch % hp.ValMonitoringFactor == 0:
-        #     test_losses_src.append(test_loss_s.item())
-        #     test_losses_tgt.append(test_loss_t.item())
-        # losses_dd.append(loss_dd.item())
-        # losses_nn.append(loss_nn.item())
-        # train_accs_src.append(train_acc_src)
-        # train_accs_tgt.append(train_acc_tgt)
-        # if batch % hp.ValMonitoringFactor == 0:
-        #     test_accs_src.append(test_acc_src)
-        #     test_accs_tgt.append(test_acc_tgt)
+        # ----- Train Monitoring -----
+        if hp.MonitorTraining:
+            _, idx = src_pred.max(dim=1)
+            train_acc_src = (idx == src_label).sum().cpu().item() / len(idx)
+            _, idx = tgt_pred.max(dim=1)
+            train_acc_tgt = (idx == tgt_label).sum().cpu().item() / len(idx)
+        # ----- Val Monitoring -----
+        if batch % hp.ValMonitoringFactor == 0:
+            with torch.no_grad():
+                net.eval()
+                src_img, src_label, tgt_img, tgt_label = next(val_iter)
+                src_img, tgt_img = (x.to(device, dtype=torch.float) for x in [src_img, tgt_img])
+                src_label, tgt_label = (x.to(device, dtype=torch.long) for x in [src_label, tgt_label])
+                src_pred = net(src_img)
+                tgt_pred = net(tgt_img)
+                val_loss_s = criterion(src_pred, src_label)
+                val_loss_t = criterion(tgt_pred, tgt_label)
 
-    ##
+                _, idx = src_pred.max(dim=1)
+                val_acc_src = (idx == src_label).sum().cpu().item() / len(idx)
+
+                _, idx = tgt_pred.max(dim=1)
+                val_acc_tgt = (idx == tgt_label).sum().cpu().item() / len(idx)
+        # ----- Logging -----
+        exec(open(os.path.join("Scripts", "LoggingScript.py")).read())
+
+    ## Evaluate on test
     SrcTestAccs, TgtTestAccs = [
         EvalAcc(net, test_loader, BatchLim=100, Domain=x, Text='Evaluating test datapoints from the %s domain' % x) for
         x in ['Src', 'Tgt']]
@@ -117,24 +125,26 @@ def RunCofiguration(hp):
         EvalAcc(net, train_loader, BatchLim=100, Domain=x, Text='Evaluating train datapoints from the %s domain' % x)
         for x in ['Src', 'Tgt']]
 
+    print('Results for experiment: %s' % hp.ExpName)
+    print('     Source domain:')
+    print('         Train Acc = %g' % (np.mean(SrcTrainAccs)))
+    print('         Test Acc = %g' % (np.mean(TgtTrainAccs)))
+    print('     Target domain:')
+    print('         Train Acc=%g' % (np.mean(SrcTestAccs)))
+    print('         Test Acc=%g' % (np.mean(TgtTestAccs)))
+
     if hp.LogToWandb:
-        1
-    else:
-        print('Results for experiment: %s' % hp.ExpName)
-        print('     Source domain:')
-        print('         Train Acc = %g' % (np.mean(SrcTrainAccs)))
-        print('         Test Acc = %g' % (np.mean(TgtTrainAccs)))
-        print('     Target domain:')
-        print('         Train Acc=%g' % (np.mean(SrcTestAccs)))
-        print('         Test Acc=%g' % (np.mean(TgtTestAccs)))
+        wandb.run.summary["Source Train Acc"] = np.mean(SrcTrainAccs)
+        wandb.run.summary["Target Train Acc"] = np.mean(TgtTrainAccs)
+        wandb.run.summary["Source Test Acc"] = np.mean(SrcTestAccs)
+        wandb.run.summary["Target Test Acc"] = np.mean(TgtTestAccs)
+
 
 ##
 if __name__ == "__main__":
     args = parser.parse_args()
+    # args.Src='A'; args.Tgt = 'W'
     hp=GetConfFromArgs(args)
-
-    hp.Src='A'
-    hp.Tgt='W'
     RunCofiguration(hp)
 
 
