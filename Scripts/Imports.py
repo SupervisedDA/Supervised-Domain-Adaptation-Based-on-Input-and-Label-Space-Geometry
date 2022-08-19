@@ -42,19 +42,3 @@ import timm
 import wandb
 
 import argparse
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
