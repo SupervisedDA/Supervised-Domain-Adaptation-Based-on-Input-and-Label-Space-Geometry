@@ -43,6 +43,12 @@ def RunCofiguration(hp):
         wandb.run.name = hp.ExpName
         config = wandb.config
         config.args = vars(hp)
+    if hp.LogToWandb:
+        wandb.login()
+        wandb.init(project=hp.ProjectName, entity=hp.WadbUsername)
+        wandb.run.name = hp.ExpName
+        config = wandb.config
+        config.args = vars(hp)
 
     ## Train model
     train_losses_src, train_losses_tgt, val_losses_src, val_losses_tgt = [], [], [], []
@@ -60,11 +66,14 @@ def RunCofiguration(hp):
     for batch in pbar:
         net.train()
         src_img, src_label, tgt_img, tgt_label = next(train_iter)
+        if not(len(src_label)==len(tgt_label)):
+            continue
         src_img, tgt_img = (x.to(device, dtype=torch.float) for x in [src_img, tgt_img])
 
         src_label, tgt_label = (x.to(device, dtype=torch.long) for x in [src_label, tgt_label])
         src_pred, src_feature = net(src_img)
         tgt_pred, tgt_feature = net(tgt_img)
+
 
         optimizer.zero_grad()
 
@@ -101,6 +110,8 @@ def RunCofiguration(hp):
             with torch.no_grad():
                 net.eval()
                 src_img, src_label, tgt_img, tgt_label = next(val_iter)
+                if not (len(src_label) == len(tgt_label)):
+                    continue
                 src_img, tgt_img = (x.to(device, dtype=torch.float) for x in [src_img, tgt_img])
                 src_label, tgt_label = (x.to(device, dtype=torch.long) for x in [src_label, tgt_label])
                 src_pred = net(src_img)
@@ -143,6 +154,9 @@ def RunCofiguration(hp):
 if __name__ == "__main__":
     args = parser.parse_args()
     hp=GetConfFromArgs(args)
+    hp.WadbUsername='orkatz'
+    hp.ProjectName = 'SDA_Experiments_Project_2'
+    hp.Method='CCSA'
     RunCofiguration(hp)
 
 
