@@ -123,8 +123,10 @@ def RunCofiguration(hp):
 if __name__ == "__main__":
     args = parser.parse_args()
     hp = GetConfFromArgs(args)
-    hp.WadbUsername = 'orkatz'
-    hp.ProjectName = 'SDA_Experiments_Project_2'
-    hp.Method = 'CCSA'
-    hp.LogToWandb=True
+    # hp.WadbUsername = 'orkatz'
+    # hp.ProjectName = 'SDA_Experiments_Project_2'
+    # hp.Method = 'CCSA'
+    # hp.Src='A'
+    # hp.Tgt='W'
+    # hp.LogToWandb=True
     RunCofiguration(hp)

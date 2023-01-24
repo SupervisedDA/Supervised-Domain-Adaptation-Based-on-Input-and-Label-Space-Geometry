@@ -6,10 +6,12 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 import os
+from torchvision.datasets.utils import download_and_extract_archive
 
 ##
 def get_datasets(hp):
     if hp.Src in ['M', 'U']:
+        digits_root = os.path.join('Datasets', 'digits')
         train, val, test = mnistusps(
             source_name="mnist" if hp.Src == 'M' else "usps",
             target_name="mnist" if hp.Tgt == 'M' else "usps",
@@ -20,7 +22,7 @@ def get_datasets(hp):
             image_resize=(16, 16),
             group_in_out=True,  # groups data: ((img_s, img_t), (lbl_s, _lbl_t))
             framework_conversion="pytorch",
-            data_path=os.path.join('Datasets', 'digits'),  # downloads to "~/data" per default
+            data_path=digits_root,  # downloads to "~/data" per default
         )
         train_dataset = MyDigits(train, transform=None)
         test_dataset = MyDigits(test, transform=None)
@@ -29,6 +31,18 @@ def get_datasets(hp):
 
     elif hp.Src in ['A', 'W', 'D']:
         mapper = {'A': "amazon", 'W': "webcam", 'D': "dslr"}
+        download_list = [
+            ("image_list", "image_list.zip", "https://cloud.tsinghua.edu.cn/f/d9bca681c71249f19da2/?dl=1"),
+            ("amazon", "amazon.tgz", "https://cloud.tsinghua.edu.cn/f/edc8d1bba1c740dc821c/?dl=1"),
+            ("dslr", "dslr.tgz", "https://cloud.tsinghua.edu.cn/f/ca6df562b7e64850ad7f/?dl=1"),
+            ("webcam", "webcam.tgz", "https://cloud.tsinghua.edu.cn/f/82b24ed2e08f4a3c8888/?dl=1"),
+        ]
+        office_root=os.path.join('Datasets', 'office31')
+        if not(os.path.exists(office_root)):
+            list(map(lambda args: download_data(office_root, *args), download_list))
+        else:
+            if not([check_exits(office_root, x[0]) for x in download_list].count(None) == 4):
+                list(map(lambda args: download_data(office_root, *args), download_list))
         train, val, test = office31(
             source_name=mapper[hp.Src],
             target_name=mapper[hp.Tgt],
@@ -37,8 +51,7 @@ def get_datasets(hp):
             image_resize=(240, 240),
             group_in_out=True,  # groups data: ((img_s, img_t), (lbl_s, _lbl_t))
             framework_conversion="pytorch",
-            office_path=os.path.join('Datasets', 'office31'),
-            # automatically downloads to "~/data"
+            office_path=office_root,
         )
         train_dataset = MyOffice(train, transform=office_train_transform)
         test_dataset = MyOffice(test, transform=office_val_transform)
@@ -49,6 +62,39 @@ def get_datasets(hp):
                                                           shuffle=True, num_workers=0, drop_last=False)
                                                for dataset in [train_dataset, test_dataset, val_dataset]]
     return train_loader, test_loader, val_loader, n_classes
+
+##
+def download_data(root: str, file_name: str, archive_name: str, url_link: str):
+    """
+    Download file from internet url link.
+
+    Args:
+        root (str) The directory to put downloaded files.
+        file_name: (str) The name of the unzipped file.
+        archive_name: (str) The name of archive(zipped file) downloaded.
+        url_link: (str) The url link to download data.
+
+    .. note::
+        If `file_name` already exists under path `root`, then it is not downloaded again.
+        Else `archive_name` will be downloaded from `url_link` and extracted to `file_name`.
+    """
+    if not os.path.exists(os.path.join(root, file_name)):
+        print("Downloading {}".format(file_name))
+        # if os.path.exists(os.path.join(root, archive_name)):
+        #     os.remove(os.path.join(root, archive_name))
+        try:
+            download_and_extract_archive(url_link, download_root=root, filename=archive_name, remove_finished=False)
+        except Exception:
+            print("Fail to download {} from url link {}".format(archive_name, url_link))
+            print('Please check you internet connection.'
+                  "Simply trying again may be fine.")
+            exit(0)
+
+def check_exits(root: str, file_name: str):
+    """Check whether `file_name` exists under directory `root`. """
+    if not os.path.exists(os.path.join(root, file_name)):
+        print("Dataset directory {} not found under {}".format(file_name, root))
+        # exit(-1)
 
 ##
 def send_to_device(tensor, device):
